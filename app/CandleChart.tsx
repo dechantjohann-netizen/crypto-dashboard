@@ -1,76 +1,122 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { createChart, CandlestickSeries, LineSeries, ColorType } from "lightweight-charts";
+import { useEffect, useRef, useState } from "react";
+import {
+  CandlestickSeries,
+LineSeries,
+HistogramSeries,
+  ColorType,
+  createChart,
+} from "lightweight-charts";
 
+export default function CandleChart({
+  selectedCoin,
+  selectedTimeframe,
+}: {
+  selectedCoin: string;
+  selectedTimeframe: string;
+}) {
+  const chartRef = useRef<HTMLDivElement | null>(null);
+  const [chartData, setChartData] = useState<any[]>([]);
+useEffect(() => {
+  async function loadCandles() {
+    try {
+      const symbolMap: Record<string, string> = {
+        BTC: "BTCUSDT",
+        ADA: "ADAUSDT",
+        AVAX: "AVAXUSDT",
+        GRT: "GRTUSDT",
+        KAS: "KASUSDT",
+      };
 
-type CandleChartProps = {
-  data: {
-    time: string;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-  }[];
-  timeframe?: string;
-};
+      const intervalMap: Record<string, string> = {
+        "1h": "1h",
+        "4h": "4h",
+        "1d": "1d",
+        "1w": "1w",
+      };
 
-export default function CandleChart({ data, timeframe }: CandleChartProps) {
-  const chartContainerRef = useRef<HTMLDivElement | null>(null);
+      const symbol = symbolMap[selectedCoin] ?? "BTCUSDT";
+      const interval = intervalMap[selectedTimeframe] ?? "1d";
 
+      const res = await fetch(
+        `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=80`
+      );
+
+      const data = await res.json();
+
+      const candles = data.map((item: any[]) => ({
+        time: Math.floor(item[0] / 1000),
+        open: Number(item[1]),
+        high: Number(item[2]),
+        low: Number(item[3]),
+        close: Number(item[4]),
+      }));
+
+      setChartData(candles);
+    } catch {
+      setChartData([]);
+    }
+  }
+
+    loadCandles();
+
+  const timer = setInterval(loadCandles, 30000);
+
+  return () => clearInterval(timer);
+}, [selectedCoin, selectedTimeframe]);
   useEffect(() => {
-    if (!chartContainerRef.current || data.length === 0) return;
+    if (!chartRef.current) return;
 
-    const chart = createChart(chartContainerRef.current, {
-      width: chartContainerRef.current.clientWidth,
-      height: 520,
+    const chart = createChart(chartRef.current, {
+      width: chartRef.current.clientWidth,
+      height: 470,
       layout: {
-        background: { type: ColorType.Solid, color: "#111827" },
-        textColor: "#d1d5db",
+        background: { type: ColorType.Solid, color: "#07111f" },
+        textColor: "#9ca3af",
       },
       grid: {
-  vertLines: { color: "#1f2937" },
-  horzLines: { color: "#1f2937" },
-},
-
-timeScale: {
+        vertLines: { color: "#102033" },
+        horzLines: { color: "#102033" },
+      },
+      timeScale: {
+  borderColor: "#1e3a5f",
   timeVisible: true,
-  secondsVisible: false,
-  borderColor: "#1f2937",
-  barSpacing: 14,
-  minBarSpacing: 8,
-  rightOffset: 6,
+  barSpacing: 6,
+  rightOffset: 2,
 },
+      rightPriceScale: {
+        borderColor: "#1e3a5f",
+      },
+    });
+chart.applyOptions({
+  timeScale: {
+    barSpacing: 5,
+    rightOffset: 8,
+  },
+});
+    const candleSeries = chart.addSeries(CandlestickSeries, {
+      upColor: "#22c55e",
+      downColor: "#ef4444",
+      borderUpColor: "#22c55e",
+      borderDownColor: "#ef4444",
+      wickUpColor: "#22c55e",
+      wickDownColor: "#ef4444",
     });
 
-    const candleSeries = chart.addSeries(CandlestickSeries, {
-  upColor: "#00ff99",
-downColor: "#ff3355",
-borderUpColor: "#00ff99",
-borderDownColor: "#ff3355",
-wickUpColor: "#00ff99",
-wickDownColor: "#ff3355",
-  priceLineVisible: false,
-  lastValueVisible: true,
-});
+    candleSeries.setData(chartData);
+const emaData = chartData.map((item, index) => {
+  const range = chartData.slice(Math.max(0, index - 19), index + 1);
 
-   candleSeries.setData(
-  data.map((item) => ({
+  const average =
+    range.reduce((sum, candle) => sum + candle.close, 0) /
+    range.length;
+
+  return {
     time: item.time,
-    open: item.open,
-    high: item.high,
-    low: item.low,
-    close: item.close,
-  }))
-);
-const emaData = data.map((item, index) => ({
-  time: item.time,
-  value:
-    data
-      .slice(Math.max(0, index - 8), index + 1)
-      .reduce((sum, d) => sum + d.close, 0) /
-    data.slice(Math.max(0, index - 8), index + 1).length,
-}));
+    value: average,
+  };
+});
 
 const emaSeries = chart.addSeries(LineSeries, {
   color: "#facc15",
@@ -78,39 +124,93 @@ const emaSeries = chart.addSeries(LineSeries, {
 });
 
 emaSeries.setData(emaData);
-  const emaDataLong = data.map((item, index) => ({
-  time: item.time,
-  value:
-    data
-      .slice(Math.max(0, index - 20), index + 1)
-      .reduce((sum, d) => sum + d.close, 0) /
-    data.slice(Math.max(0, index - 20), index + 1).length,
-}));
+const ema50Data = chartData.map((item, index) => {
+  const range = chartData.slice(Math.max(0, index - 49), index + 1);
 
-const emaSeriesLong = chart.addSeries(LineSeries, {
+  const average =
+    range.reduce((sum, candle) => sum + candle.close, 0) /
+    range.length;
+
+  return {
+    time: item.time,
+    value: average,
+  };
+});
+
+const ema50Series = chart.addSeries(LineSeries, {
   color: "#38bdf8",
   lineWidth: 2,
 });
 
-emaSeriesLong.setData(emaDataLong);  
-const macdData = emaData.map((item, index) => ({
+ema50Series.setData(ema50Data);
+const volumeData = chartData.map((item) => ({
   time: item.time,
-  value: item.value - emaDataLong[index].value,
+  value: Math.abs(item.close - item.open) * 100000,
+  color:
+    item.close >= item.open
+      ? "rgba(34,197,94,0.35)"
+      : "rgba(239,68,68,0.35)",
 }));
 
-const macdSeries = chart.addSeries(LineSeries, {
+const volumeSeries = chart.addSeries(HistogramSeries, {
+  priceFormat: {
+    type: "volume",
+  },
+  priceScaleId: "",
+});
+
+volumeSeries.setData(volumeData);
+const rsiData = chartData.map((item, index) => {
+  if (index === 0) {
+    return {
+      time: item.time,
+      value: 50,
+    };
+  }
+
+  const previous = chartData[index - 1].close;
+  const current = item.close;
+
+  const diff = current - previous;
+
+  let value = 50 + diff * 500;
+
+  if (value > 100) value = 100;
+  if (value < 0) value = 0;
+
+  return {
+    time: item.time,
+    value,
+  };
+});
+
+const rsiSeries = chart.addSeries(LineSeries, {
   color: "#a855f7",
   lineWidth: 2,
   priceScaleId: "",
 });
 
-macdSeries.setData(macdData);
-    
+rsiSeries.setData(rsiData);
+const lastRsi = rsiData[rsiData.length - 1]?.value ?? 50;
+
+console.log("RSI:", lastRsi);
+    chart.timeScale().fitContent();
 
     return () => {
       chart.remove();
     };
-  }, [data]);
+  }, [selectedCoin, selectedTimeframe]);
 
-  return <div ref={chartContainerRef} style={{ width: "100%", minWidth: 0, height: 520 }} />;
+  return (
+    <div
+      ref={chartRef}
+      style={{
+        width: "100%",
+        height: 470,
+        borderRadius: 18,
+        overflow: "hidden",
+        border: "1px solid rgba(59,130,246,0.18)",
+      }}
+    />
+  );
 }

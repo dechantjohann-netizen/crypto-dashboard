@@ -72,53 +72,63 @@ export default function Page() {
         background:
   "radial-gradient(circle at top left, #0f172a 0%, #050816 45%, #020617 100%)",
         color: "white",
-        display: "grid",
-        gridTemplateColumns: "200px 1fr 420px",
-        gap: 18,
-        padding: 18,
+                display: "flex",
+        flexDirection: "column",
+        gap: 14,
+        padding: 12,
         fontFamily: "Arial, sans-serif",
+        width: "100%",
+maxWidth: 430,
+        margin: "0 auto",
+        overflowX: "hidden",
       }}
     >
-      <aside style={panelStyle}>
-        <div style={{ fontSize: 26, fontWeight: 900, color: "#3b82f6" }}>
-          Ivan
-        </div>
+      
 
-        {["Dashboard", "Portfolio", "Markets", "Signals", "Settings"].map(
-          (item) => (
-            <div
-              key={item}
-              style={{
-                padding: "13px 14px",
-                borderRadius: 14,
-                background: item === "Dashboard" ? "#111827" : "transparent",
-                border:
-                  item === "Dashboard"
-                    ? "1px solid #2563eb"
-                    : "1px solid transparent",
-                fontWeight: 700,
-              }}
-            >
-              {item}
-            </div>
-          )
-        )}
-      </aside>
+      <section
+  style={{
+    display: "flex",
+    flexDirection: "column",
+    gap: 22,
+    width: "100%",
+  }}
+>
+        <div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 14,
+  }}
+>
+  <div
+    style={{
+      fontSize: 30,
+      cursor: "pointer",
+    }}
+  >
+    ☰
+  </div>
 
-      <section style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 34, fontWeight: 900 }}>
-            Crypto Dashboard
-          </h1>
-          <div style={{ color: "#9ca3af", marginTop: 6 }}>
-            Live Market Overview
-          </div>
-        </div>
+  <div>
+    <h1 style={{ margin: 0, fontSize: 34, fontWeight: 900 }}>
+      Crypto Dashboard
+    </h1>
+
+    <div
+      style={{
+        color: "#9ca3af",
+        marginTop: 6,
+      }}
+    >
+      Live Market Overview
+    </div>
+  </div>
+</div>
 
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(180px, 1fr))",
+            gridTemplateColumns: "repeat(2, 1fr)",
             gap: 14,
           }}
         >
@@ -151,7 +161,7 @@ export default function Page() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+            gridTemplateColumns: "repeat(2, 1fr)",
             gap: 12,
           }}
         >
@@ -202,8 +212,9 @@ export default function Page() {
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
-              marginBottom: 18,
+flexDirection: "column",
+gap: 14,
+marginBottom: 18,
             }}
           >
             <div>
@@ -247,7 +258,14 @@ export default function Page() {
     </div>
   </div>
 </div>
-            <div style={{ display: "flex", gap: 12 }}>
+            <div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: 8,
+    width: "100%",
+  }}
+>
   {["1h", "4h", "1d", "1w"].map((tf) => (
     <button
       key={tf}
@@ -257,7 +275,7 @@ export default function Page() {
         color: "white",
         border: "1px solid rgba(59,130,246,0.35)",
         borderRadius: 12,
-        padding: "9px 14px",
+        padding: "12px 0",
         cursor: "pointer",
         fontWeight: 800,
         fontSize: 16,
@@ -458,11 +476,12 @@ const infoBoxStyle: React.CSSProperties = {
   background: "linear-gradient(180deg, rgba(5,10,20,0.98), rgba(3,8,18,0.98))",
   border: "1px solid rgba(59,130,246,0.32)",
   borderRadius: 34,
-  padding: 34,
+  padding: 20,
   display: "flex",
   flexDirection: "column",
   justifyContent: "space-between",
-  minHeight: 820,
+  minHeight: "auto",
+  width: "100%",
   boxShadow:
   "0 0 60px rgba(59,130,246,0.14), inset 0 0 30px rgba(255,255,255,0.02)",
 };

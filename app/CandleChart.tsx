@@ -69,8 +69,8 @@ useEffect(() => {
     if (!chartRef.current) return;
 
     const chart = createChart(chartRef.current, {
-      width: chartRef.current.clientWidth,
-      height: 470,
+      width: chartRef.current.offsetWidth,
+      height: 520,
       layout: {
         background: { type: ColorType.Solid, color: "#07111f" },
         textColor: "#9ca3af",
@@ -91,8 +91,8 @@ useEffect(() => {
     });
 chart.applyOptions({
   timeScale: {
-    barSpacing: 5,
-    rightOffset: 8,
+    barSpacing: 3,
+    rightOffset: 4,
   },
 });
     const candleSeries = chart.addSeries(CandlestickSeries, {
@@ -195,18 +195,23 @@ const lastRsi = rsiData[rsiData.length - 1]?.value ?? 50;
 
 console.log("RSI:", lastRsi);
     chart.timeScale().fitContent();
+    setTimeout(() => {
+  chart.applyOptions({
+    width: chartRef.current?.offsetWidth || 0,
+  });
+}, 100);
 
     return () => {
       chart.remove();
     };
-  }, [selectedCoin, selectedTimeframe]);
+  }, [chartData]);
 
   return (
     <div
       ref={chartRef}
       style={{
         width: "100%",
-        height: 470,
+        height: 520,
         borderRadius: 18,
         overflow: "hidden",
         border: "1px solid rgba(59,130,246,0.18)",

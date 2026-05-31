@@ -22,6 +22,72 @@ export default function Page() {
   const [prices, setPrices] = useState<Record<string, number>>({});
   const [selectedCoin, setSelectedCoin] = useState("KAS");
   const [selectedTimeframe, setSelectedTimeframe] = useState("1d");
+  const [marketAnalysis, setMarketAnalysis] = useState<any>({
+  score: 50,
+  signal: "WAIT",
+  ema20: 0,
+  ema50: 0,
+  ema200: 0,
+  rsi: 50,
+  macd: 0,
+});
+const [showForecast, setShowForecast] = useState(false);
+const [showReasons, setShowReasons] = useState(false);
+
+const forecastScore = Math.max(
+  0,
+  Math.min(100, marketAnalysis.score)
+);
+const shortProbability = Math.max(
+  0,
+  Math.min(
+    100,
+    marketAnalysis.score +
+      (marketAnalysis.rsi < 35 ? 8 : 0) +
+      (marketAnalysis.macd > 0 ? 7 : -7)
+  )
+);
+
+const midProbability = Math.max(
+  0,
+  Math.min(
+    100,
+    50 +
+      (marketAnalysis.ema20 > marketAnalysis.ema50 ? 15 : -10) +
+      (marketAnalysis.macd > 0 ? 10 : -10)
+  )
+);
+
+const longProbability = Math.max(
+  0,
+  Math.min(
+    100,
+    50 +
+      (marketAnalysis.ema50 > marketAnalysis.ema200 ? 20 : -15) +
+      (marketAnalysis.ema20 > marketAnalysis.ema200 ? 10 : -10)
+  )
+);
+
+const shortForecast =
+  shortProbability >= 65
+    ? `↗ Bullisch (${shortProbability.toFixed(0)}%)`
+    : shortProbability >= 40
+    ? `→ Neutral (${shortProbability.toFixed(0)}%)`
+    : `↘ Bärisch (${shortProbability.toFixed(0)}%)`;
+
+const midForecast =
+  midProbability >= 65
+    ? `↗ Bullisch (${midProbability.toFixed(0)}%)`
+    : midProbability >= 40
+    ? `→ Neutral (${midProbability.toFixed(0)}%)`
+    : `↘ Bärisch (${midProbability.toFixed(0)}%)`;
+
+const longForecast =
+  longProbability >= 65
+    ? `↗ Bullisch (${longProbability.toFixed(0)}%)`
+    : longProbability >= 40
+    ? `→ Neutral (${longProbability.toFixed(0)}%)`
+    : `↘ Bärisch (${longProbability.toFixed(0)}%)`;
 
   useEffect(() => {
     async function loadPrices() {
@@ -286,7 +352,11 @@ marginBottom: 18,
   ))}
 </div>
           </div>
-<CandleChart selectedCoin={selectedCoin} selectedTimeframe={selectedTimeframe} />
+<CandleChart
+  selectedCoin={selectedCoin}
+  selectedTimeframe={selectedTimeframe}
+  onAnalysisChange={setMarketAnalysis}
+/>
         </div>
       </section>
 
@@ -316,20 +386,204 @@ marginBottom: 18,
   </div>
 
   <div>
-    <div style={labelStyle}>Signal</div>
+  <div style={labelStyle}>Signal</div>
 
-    <div
-      style={{
-        color: "#22c55e",
-        fontSize: 28,
-        fontWeight: 900,
-      }}
-    >
-      BULLISCH
-    </div>
+  <div
+  style={{
+    color:
+      selectedCoin === "BTC"
+        ? "#22c55e"
+        : "#f59e0b",
+    fontSize: 28,
+    fontWeight: 900,
+  }}
+>
+  LIVE ANALYSE
+</div>
+<div
+  style={{
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 14,
+    background: "rgba(255,255,255,0.03)",
+    lineHeight: 1.8,
+    fontSize: 15,
+  }}
+>
+  <div>
+  📈 Marktstatus:{" "}
+  {marketAnalysis.score >= 70
+    ? "Stark bullisch"
+    : marketAnalysis.score >= 40
+    ? "Neutral"
+    : "Bärisch"}
+</div>
+
+<div>
+  📊 Trend:{" "}
+  {marketAnalysis.ema20 > marketAnalysis.ema50 &&
+  marketAnalysis.ema50 > marketAnalysis.ema200
+    ? "Aufwärtstrend"
+    : "Schwacher Trend"}
+</div>
+
+<div>
+  ⚡ Momentum:{" "}
+  {marketAnalysis.rsi < 35
+    ? `Fast überverkauft (${marketAnalysis.rsi.toFixed(0)})`
+    : marketAnalysis.rsi > 70
+    ? `Überhitzt (${marketAnalysis.rsi.toFixed(0)})`
+    : `Neutral (${marketAnalysis.rsi.toFixed(0)})`}
+</div>
+
+<div>
+  🎯 Signal: {marketAnalysis.signal}
+</div>
+</div>
+
+  <div
+  style={{
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 14,
+    background: "rgba(255,255,255,0.03)",
+    lineHeight: 1.8,
+    fontSize: 15,
+  }}
+>
+  <div>
+    {marketAnalysis.ema20 > marketAnalysis.ema50
+      ? "🟢 Kurzfristiger Trend"
+      : "🔴 Kurzfristiger Trend"}
   </div>
 
   <div>
+    {marketAnalysis.ema50 > marketAnalysis.ema200
+      ? "🟢 Mittelfristiger Trend"
+      : "🔴 Mittelfristiger Trend"}
+  </div>
+
+  <div>
+    {marketAnalysis.ema20 > marketAnalysis.ema200
+      ? "🟢 Langfristiger Trend"
+      : "🔴 Langfristiger Trend"}
+  </div>
+</div>
+</div>
+
+  <div>
+    <button
+  onClick={() => setShowForecast(!showForecast)}
+  style={{
+    marginTop: 18,
+    width: "100%",
+    padding: "14px",
+    borderRadius: 14,
+    border: "1px solid rgba(59,130,246,0.35)",
+    background: "#2563eb",
+    color: "white",
+    fontSize: 16,
+    fontWeight: 900,
+    cursor: "pointer",
+  }}
+>
+  🔮 Prognose anzeigen
+</button>
+
+{showForecast && (
+  <div
+    style={{
+      marginTop: 14,
+      padding: 14,
+      borderRadius: 14,
+      background: "rgba(255,255,255,0.03)",
+      lineHeight: 1.8,
+      fontSize: 15,
+    }}
+  >
+    <div
+  style={{
+    color: shortProbability >= 65 ? "#22c55e" : shortProbability < 40 ? "#ef4444" : "#facc15",
+    fontWeight: 700,
+  }}
+>
+  📅 7 Tage: {shortForecast}
+</div>
+
+<div
+  style={{
+    color: midProbability >= 65 ? "#22c55e" : midProbability < 40 ? "#ef4444" : "#facc15",
+    fontWeight: 700,
+  }}
+>
+  📅 30 Tage: {midForecast}
+</div>
+
+<div
+  style={{
+    color: longProbability >= 65 ? "#22c55e" : longProbability < 40 ? "#ef4444" : "#facc15",
+    fontWeight: 700,
+  }}
+>
+  📅 90 Tage: {longForecast}
+</div>
+    
+    <button
+  onClick={() => setShowReasons(!showReasons)}
+  style={{
+    marginTop: 12,
+    width: "100%",
+    padding: "10px",
+    borderRadius: 10,
+    border: "none",
+    background: "#1e293b",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: 700,
+  }}
+>
+  🔍 Warum diese Prognose?
+</button>
+{showReasons && (
+  <div
+    style={{
+      marginTop: 12,
+      padding: 12,
+      borderRadius: 10,
+      background: "rgba(255,255,255,0.03)",
+      fontSize: 14,
+      lineHeight: 1.8,
+    }}
+  >
+    <div>
+      {marketAnalysis.ema20 > marketAnalysis.ema50
+        ? "✅ EMA20 über EMA50"
+        : "❌ EMA20 unter EMA50"}
+    </div>
+
+    <div>
+      {marketAnalysis.ema50 > marketAnalysis.ema200
+        ? "✅ EMA50 über EMA200"
+        : "❌ EMA50 unter EMA200"}
+    </div>
+
+    <div>
+      {marketAnalysis.rsi < 35
+        ? "✅ RSI günstig"
+        : marketAnalysis.rsi > 70
+        ? "⚠️ RSI überkauft"
+        : "➖ RSI neutral"}
+    </div>
+
+    <div>
+      {marketAnalysis.macd > 0
+        ? "✅ MACD positiv"
+        : "❌ MACD negativ"}
+    </div>
+  </div>
+)}
+  </div>
+)}
     <div style={labelStyle}>Zeitraum</div>
 
     <div
@@ -385,9 +639,14 @@ marginBottom: 18,
       >
         <div
           style={{
-            width: "78%",
+            width: `${Math.min(100, Math.max(0, marketAnalysis.rsi))}%`,
             height: "100%",
-            background: "#22c55e",
+            background:
+  marketAnalysis.rsi > 70
+    ? "#ef4444"
+    : marketAnalysis.rsi < 30
+    ? "#f59e0b"
+    : "#22c55e",
           }}
         />
       </div>
@@ -411,9 +670,15 @@ marginBottom: 18,
       >
         <div
           style={{
-            width: "86%",
+            width: `${Math.min(
+  100,
+  Math.max(0, 50 + marketAnalysis.macd / 50)
+)}%`,
             height: "100%",
-            background: "#22c55e",
+            background:
+  marketAnalysis.macd > 0
+    ? "#22c55e"
+    : "#ef4444",
           }}
         />
       </div>
@@ -433,9 +698,15 @@ marginBottom: 18,
       >
         <div
           style={{
-            width: "94%",
+            width: `${Math.max(
+  20,
+  Math.min(100, Math.abs(marketAnalysis.macd))
+)}%`,
             height: "100%",
-            background: "#22c55e",
+            background:
+  marketAnalysis.macd > 0
+    ? "#22c55e"
+    : "#f59e0b",
           }}
         />
       </div>
